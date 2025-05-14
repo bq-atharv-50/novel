@@ -22,7 +22,6 @@ import { LinkSelector } from "./selectors/link-selector";
 import { MathSelector } from "./selectors/math-selector";
 import { NodeSelector } from "./selectors/node-selector";
 import { Separator } from "./ui/separator";
-
 import GenerativeMenuSwitch from "./generative/generative-menu-switch";
 import { uploadFn } from "./image-upload";
 import { TextButtons } from "./selectors/text-buttons";
@@ -32,7 +31,18 @@ const hljs = require("highlight.js");
 
 const extensions = [...defaultExtensions, slashCommand];
 
-const TailwindAdvancedEditor = () => {
+// Props interface added
+interface TailwindAdvancedEditorProps {
+  editorKey?: string;
+  initialRawContent?: string;
+  onRawContentChange?: (raw: string) => void;
+}
+
+const TailwindAdvancedEditor = ({
+  editorKey,
+  initialRawContent,
+  onRawContentChange,
+}: TailwindAdvancedEditorProps) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(null);
   const [saveStatus, setSaveStatus] = useState("Saved");
   const [charsCount, setCharsCount] = useState();
@@ -42,12 +52,10 @@ const TailwindAdvancedEditor = () => {
   const [openLink, setOpenLink] = useState(false);
   const [openAI, setOpenAI] = useState(false);
 
-  //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
     const doc = new DOMParser().parseFromString(content, "text/html");
     doc.querySelectorAll("pre code").forEach((el) => {
       // @ts-ignore
-      // https://highlightjs.readthedocs.io/en/latest/api.html?highlight=highlightElement#highlightelement
       hljs.highlightElement(el);
     });
     return new XMLSerializer().serializeToString(doc);
@@ -59,14 +67,33 @@ const TailwindAdvancedEditor = () => {
     window.localStorage.setItem("html-content", highlightCodeblocks(editor.getHTML()));
     window.localStorage.setItem("novel-content", JSON.stringify(json));
     window.localStorage.setItem("markdown", editor.storage.markdown.getMarkdown());
+
+    if (onRawContentChange) {
+      onRawContentChange(JSON.stringify(json));
+    }
+
     setSaveStatus("Saved");
   }, 500);
 
+  // Load content from props or fallback
   useEffect(() => {
-    const content = window.localStorage.getItem("novel-content");
-    if (content) setInitialContent(JSON.parse(content));
-    else setInitialContent(defaultEditorContent);
-  }, []);
+    if (initialRawContent !== undefined) {
+       // New editor: show default content
+      if (initialRawContent.trim() === "") {
+        setInitialContent(defaultEditorContent);
+      } else {
+        try {
+          const parsed = JSON.parse(initialRawContent);
+          setInitialContent(parsed);
+        } catch {
+          setInitialContent(defaultEditorContent);
+        }
+      }
+    } else {
+      // Fallback only if nothing is passed
+      setInitialContent(defaultEditorContent);
+    }
+  }, [editorKey]);
 
   if (!initialContent) return null;
 
@@ -126,7 +153,6 @@ const TailwindAdvancedEditor = () => {
             <Separator orientation="vertical" />
             <NodeSelector open={openNode} onOpenChange={setOpenNode} />
             <Separator orientation="vertical" />
-
             <LinkSelector open={openLink} onOpenChange={setOpenLink} />
             <Separator orientation="vertical" />
             <MathSelector />
