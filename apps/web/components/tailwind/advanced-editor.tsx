@@ -74,9 +74,11 @@ const TailwindAdvancedEditor = ({
 
     setSaveStatus("Saved");
   }, 500);
-
+ 
+  
   // Load content from props or fallback
   useEffect(() => {
+  
     if (initialRawContent !== undefined) {
        // New editor: show default content
       if (initialRawContent.trim() === "") {

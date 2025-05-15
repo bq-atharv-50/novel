@@ -8,35 +8,56 @@ import { ScrollArea } from "@/components/tailwind/ui/scroll-area";
 import { BookOpen, GithubIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import useFetchRootNodes from "@/hooks/use-fetchRootData";
 
-interface EditorEntry {
+interface Node {
   id: string;
   title: string;
+  parentId : null | string;
+  gitPath : string;
+  commitSha : string;
+  createdAt : string;
+  updatedAt : string;
+  content : string;
+  children : {_id : string ; title : string}[];
 }
 
 export default function Page() {
-  const [editorEntries, setEditorEntries] = useState<EditorEntry[]>([]);
+  const [ allRootNode, setAllRootNode] = useState<Node[]>([]);
   const [selectedEditor, setSelectedEditor] = useState<string | null>(null);
   const [editorContentMap, setEditorContentMap] = useState<Record<string, string>>({});
+  const rootNodes = useFetchRootNodes();
 
   useEffect(() => {
-    const savedEntries = JSON.parse(localStorage.getItem("editorEntries") || "[]");
-    const savedContents = JSON.parse(localStorage.getItem("editorContentMap") || "{}");
-    setEditorEntries(savedEntries);
-    setEditorContentMap(savedContents);
-    if (savedEntries.length > 0) setSelectedEditor(savedEntries[0].id);
-  }, []);
+
+    const storedRootNodes = localStorage.getItem('rootNodes');
+
+    // if(storedRootNodes){
+    //   const parsedRootNodes = JSON.parse(storedRootNodes);
+    //   setAllRootNode(parsedRootNodes);
+    //   setSelectedEditor(parsedRootNodes[0]?.id || null);
+    // }
+    if (rootNodes.length > 0 ){
+      
+      localStorage.setItem('rootNodes' , JSON.stringify(rootNodes));
+      setAllRootNode(rootNodes);
+      setSelectedEditor(rootNodes[0].id);
+      const savedContents = JSON.parse(localStorage.getItem("editorContentMap") || "{}");
+      setEditorContentMap(savedContents);
+    }
+  
+  }, [rootNodes]);
 
   useEffect(() => {
-    localStorage.setItem("editorEntries", JSON.stringify(editorEntries));
+    localStorage.setItem("editorEntries", JSON.stringify(allRootNode));
     localStorage.setItem("editorContentMap", JSON.stringify(editorContentMap));
-  }, [editorEntries, editorContentMap]);
+  }, [allRootNode, editorContentMap]);
 
   const handleAddEditor = (title: string) => {
-    const newEntry: EditorEntry = { id: crypto.randomUUID(), title };
-    setEditorEntries((prev) => [...prev, newEntry]);
-    setEditorContentMap((prev) => ({ ...prev, [newEntry.id]: "" }));
-    setSelectedEditor(newEntry.id);
+    // const newEntry: EditorEntry = { id: crypto.randomUUID(), title };
+    // setEditorEntries((prev) => [...prev, newEntry]);
+    // setEditorContentMap((prev) => ({ ...prev, [newEntry.id]: "" }));
+    // setSelectedEditor(newEntry.id);
   };
 
   const handleEditorChange = (content: string) => {
@@ -53,7 +74,7 @@ export default function Page() {
     <div className="flex min-h-screen w-full">
       {/* Sidebar */}
       <Sidebar
-        editorTitles={editorEntries}
+        editorTitles={allRootNode}
         onAddEditor={handleAddEditor}
         onSelectEditor={setSelectedEditor}
         selectedEditor={selectedEditor}

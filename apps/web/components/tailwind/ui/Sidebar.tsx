@@ -3,14 +3,22 @@
 import { useState } from "react";
 import {Menu, X, Plus, FileText, ChevronDown, ChevronRight, ChevronsRight , ChevronsLeft} from "lucide-react";
 import clsx from "clsx";
+import useRenderNode from "@/hooks/use-renderNode";
 
-interface EditorEntry{
-  id : string;
-  title : string;
+interface Node{
+  id: string;
+  title: string;
+  parentId : null | string;
+  gitPath : string;
+  commitSha : string;
+  createdAt : string;
+  updatedAt : string;
+  
+  children : {_id : string ; title : string}[];
 }
 
 interface SidebarProps {
-  editorTitles: EditorEntry[];
+  editorTitles: Node[];
   onAddEditor: (title: string) => void;
   onSelectEditor: (title: string) => void;
   selectedEditor: string | null;
@@ -27,7 +35,9 @@ export function Sidebar({
   const [newEditorTitle, setNewEditorTitle] = useState("");
 
   const [dropDown,setDropDown] = useState(false);
+  const [openNodeIds , setOpenNodeIds ] = useState<Set<string>>(new Set());
 
+ 
   const handleAdd = () => {
     if (newEditorTitle.trim()) {
       onAddEditor(newEditorTitle.trim());
@@ -35,6 +45,30 @@ export function Sidebar({
       setShowModal(false);
     }
   };
+
+  const toggleNode = (id : string) =>{
+    setOpenNodeIds((prev ) =>{
+      const newSet = new Set(prev);
+      if(newSet.has(id)){
+        newSet.delete(id)
+      }
+      else{
+        newSet.add(id);
+      }
+      return newSet;
+    })
+  }
+
+  const renderedNodes = useRenderNode({
+    editorTitles,
+    openNodeIds,
+    selectedEditor,
+    onSelectEditor,
+    toggleNode,
+    onAddEditor: () => setShowModal(true),
+  });
+
+
 
   return (
     <>
@@ -66,9 +100,7 @@ export function Sidebar({
 
 
           <div className="relative text-sm leading-5">
-            <ul className="space-y-4 mt-4 pl-4" id="navigation-items">
-              <li>
-                <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                   <span className="pl-4 font-semibold text-lg text-gray-900 dark:text-gray-200">
                     Saved Pages
                   </span>
@@ -79,11 +111,10 @@ export function Sidebar({
                     <Plus className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                   </button>
                 </div>
-              </li>
-
-              {editorTitles.map((entry) => (
-            
-                <li
+            <ul className="space-y-4 mt-4 pl-4" id="navigation-items">
+  
+              {/* {editorTitles.map((entry) => (
+               <li
                   key={entry.id}
                   className={clsx(
                   "group pl-2 text-gray-700 dark:text-gray-300 cursor-pointer p-1 font-medium",
@@ -101,7 +132,9 @@ export function Sidebar({
                       >
                         {
                           dropDown ?   
-                          <ChevronDown className="h-5 w-5"/> :  <ChevronRight className="h-5 w-5"/> 
+                          <ChevronDown className="h-5 w-5"/> :  
+                          <ChevronRight className="h-5 w-5"
+                          /> 
                         }
                         
                       </div>
@@ -117,7 +150,9 @@ export function Sidebar({
                   </div>
                   
                 </li>
-              ))}
+              ))} */}
+              {renderedNodes}
+              
             </ul>
           </div>
         </div>

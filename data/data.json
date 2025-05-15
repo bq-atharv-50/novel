@@ -1,0 +1,124 @@
+[
+    {
+      "id": "1",
+      "title": "Home",
+      "parentId": null,
+      "gitPath": "docs/home.md",
+      "commitSha": "abc1234",
+      "createdAt": "2024-01-01T10:00:00Z",
+      "updatedAt": "2024-05-01T12:00:00Z",
+      "content": "Welcome to the documentation home page. Start your journey here.",
+      "children": [
+        { "_id": "2", "title": "Getting Started" },
+        { "_id": "3", "title": "Installation" }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Getting Started",
+      "parentId": "1",
+      "gitPath": "docs/getting-started.md",
+      "commitSha": "def5678",
+      "createdAt": "2024-01-02T11:00:00Z",
+      "updatedAt": "2024-05-02T09:00:00Z",
+      "content": "This section helps you begin using the product efficiently.",
+      "children": []
+    },
+    {
+      "id": "3",
+      "title": "Installation",
+      "parentId": "1",
+      "gitPath": "docs/installation.md",
+      "commitSha": "ghi9012",
+      "createdAt": "2024-01-03T13:30:00Z",
+      "updatedAt": "2024-05-03T15:10:00Z",
+      "content": "Learn how to install the software on various platforms.",
+      "children": [
+        { "_id": "4", "title": "Windows" },
+        { "_id": "5", "title": "macOS" }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Windows",
+      "parentId": "3",
+      "gitPath": "docs/installation/windows.md",
+      "commitSha": "jkl3456",
+      "createdAt": "2024-01-04T14:00:00Z",
+      "updatedAt": "2024-05-04T16:00:00Z",
+      "content": "Steps to install on Windows OS using the executable installer.",
+      "children": []
+    },
+    {
+      "id": "5",
+      "title": "macOS",
+      "parentId": "3",
+      "gitPath": "docs/installation/macos.md",
+      "commitSha": "mno7890",
+      "createdAt": "2024-01-05T15:00:00Z",
+      "updatedAt": "2024-05-05T17:30:00Z",
+      "content": "Guide to installing the application on macOS using Homebrew.",
+      "children": []
+    },
+    {
+      "id": "6",
+      "title": "API Reference",
+      "parentId": null,
+      "gitPath": "docs/api/index.md",
+      "commitSha": "api1234",
+      "createdAt": "2024-02-01T09:00:00Z",
+      "updatedAt": "2024-05-06T11:00:00Z",
+      "content": "Comprehensive reference guide for available API endpoints.",
+      "children": [
+        { "_id": "7", "title": "Authentication" },
+        { "_id": "8", "title": "Endpoints" }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "Authentication",
+      "parentId": "6",
+      "gitPath": "docs/api/authentication.md",
+      "commitSha": "auth5678",
+      "createdAt": "2024-02-02T10:00:00Z",
+      "updatedAt": "2024-05-07T12:30:00Z",
+      "content": "Learn how to authenticate users and manage access tokens.",
+      "children": []
+    },
+    {
+      "id": "8",
+      "title": "Endpoints",
+      "parentId": "6",
+      "gitPath": "docs/api/endpoints.md",
+      "commitSha": "end9012",
+      "createdAt": "2024-02-03T11:15:00Z",
+      "updatedAt": "2024-05-08T14:45:00Z",
+      "content": "Detailed list of REST API endpoints with descriptions.",
+      "children": [
+        { "_id": "9", "title": "User API" }
+      ]
+    },
+    {
+      "id": "9",
+      "title": "User API",
+      "parentId": "8",
+      "gitPath": "docs/api/endpoints/user.md",
+      "commitSha": "user3456",
+      "createdAt": "2024-02-04T12:00:00Z",
+      "updatedAt": "2024-05-09T16:00:00Z",
+      "content": "API methods for managing user data and account operations.",
+      "children": []
+    },
+    {
+      "id": "10",
+      "title": "API Data",
+      "parentId": null,
+      "gitPath": "docs/api/index.md",
+      "commitSha": "api1234",
+      "createdAt": "2024-02-01T09:00:00Z",
+      "updatedAt": "2024-05-06T11:00:00Z",
+      "content": "Overview of available data types and API schemas.",
+      "children": []
+    }
+  ]
+  
