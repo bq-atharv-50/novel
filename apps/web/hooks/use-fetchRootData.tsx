@@ -21,15 +21,22 @@ const useFetchRootNodes = () =>{
     const [rootNode , setRootNode ] = useState<Node[]>([]);
 
     useEffect(()=>{
-        const rootNodes = data.filter( (node) => node.parentId === null);
+        const fetchData = async()=>{
+            try{
+                const response = await fetch('http://localhost:5000/getNoteParent')
+                const data : Node[] = await response.json();
+                setRootNode(data)
+                console.log(data);
+            }
+            catch(error){
+                console.log("Failed to Fetch the Pages" , error);
+            }
+        }
 
-        setRootNode(rootNodes);
+        fetchData();
     },[])
 
-
-
     return rootNode;
-
 }
 
 export default useFetchRootNodes;

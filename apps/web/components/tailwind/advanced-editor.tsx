@@ -26,6 +26,7 @@ import GenerativeMenuSwitch from "./generative/generative-menu-switch";
 import { uploadFn } from "./image-upload";
 import { TextButtons } from "./selectors/text-buttons";
 import { slashCommand, suggestionItems } from "./slash-command";
+import { text } from "stream/consumers";
 
 const hljs = require("highlight.js");
 
@@ -37,7 +38,6 @@ interface TailwindAdvancedEditorProps {
   initialRawContent?: string;
   onRawContentChange?: (raw: string) => void;
 }
-
 const TailwindAdvancedEditor = ({
   editorKey,
   initialRawContent,
@@ -45,7 +45,9 @@ const TailwindAdvancedEditor = ({
 }: TailwindAdvancedEditorProps) => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(null);
   const [saveStatus, setSaveStatus] = useState("Saved");
-  const [charsCount, setCharsCount] = useState();
+  const [charsCount, setCharsCount] = useState<number>();
+  const [editorInstance, setEditorInstance] = useState<EditorInstance | null>(null);
+  const [contentKey, setContentKey] = useState(0); // Key to force remount when content changes
 
   const [openNode, setOpenNode] = useState(false);
   const [openColor, setOpenColor] = useState(false);
@@ -74,31 +76,45 @@ const TailwindAdvancedEditor = ({
 
     setSaveStatus("Saved");
   }, 500);
- 
-  
+
   // Load content from props or fallback
   useEffect(() => {
+    let contentToLoad = defaultEditorContent;
   
-    if (initialRawContent !== undefined) {
-       // New editor: show default content
-      if (initialRawContent.trim() === "") {
-        setInitialContent(defaultEditorContent);
-      } else {
-        try {
-          const parsed = JSON.parse(initialRawContent);
-          setInitialContent(parsed);
-        } catch {
-          setInitialContent(defaultEditorContent);
-        }
+    if (typeof initialRawContent === "string" && initialRawContent.trim() !== "") {
+      try {
+        contentToLoad = JSON.parse(initialRawContent);
+      } catch {
+        contentToLoad = {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: initialRawContent,
+                },
+              ],
+            },
+          ],
+        };
       }
-    } else {
-      // Fallback only if nothing is passed
-      setInitialContent(defaultEditorContent);
     }
-  }, [editorKey]);
-
+  
+    setInitialContent(contentToLoad);
+  
+    // ✅ Delay editor command until next microtask
+    if (editorInstance) {
+      queueMicrotask(() => {
+        editorInstance.commands.setContent(contentToLoad);
+      });
+    } else {
+      setContentKey((prev) => prev + 1);
+    }
+  }, [editorKey, initialRawContent]);
+  
   if (!initialContent) return null;
-
   return (
     <div className="relative w-full max-w-screen-lg">
       <div className="flex absolute right-5 top-5 z-10 mb-5 gap-2">
@@ -109,6 +125,7 @@ const TailwindAdvancedEditor = ({
       </div>
       <EditorRoot>
         <EditorContent
+          key={`${editorKey || 'editor'}-${contentKey}`} // Unique key for each content update
           initialContent={initialContent}
           extensions={extensions}
           className="relative min-h-[500px] w-full max-w-screen-lg border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:shadow-lg"
@@ -119,18 +136,27 @@ const TailwindAdvancedEditor = ({
             handlePaste: (view, event) => handleImagePaste(view, event, uploadFn),
             handleDrop: (view, event, _slice, moved) => handleImageDrop(view, event, moved, uploadFn),
             attributes: {
-              class:
-                "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
+              class: "prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full",
             },
+            transformPastedText: (text) => text,
           }}
+          onCreate={({ editor }) => {
+            setEditorInstance(editor);
+          }}
+
           onUpdate={({ editor }) => {
             debouncedUpdates(editor);
             setSaveStatus("Unsaved");
           }}
+          // onEditorReady={(editor) => {
+          //   setEditorInstance(editor);
+          // }}
           slotAfter={<ImageResizer />}
         >
           <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
-            <EditorCommandEmpty className="px-2 text-muted-foreground">No results</EditorCommandEmpty>
+            <EditorCommandEmpty className="px-2 text-muted-foreground">
+              No results
+            </EditorCommandEmpty>
             <EditorCommandList>
               {suggestionItems.map((item) => (
                 <EditorCommandItem

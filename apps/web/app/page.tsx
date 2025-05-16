@@ -9,6 +9,12 @@ import { BookOpen, GithubIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useFetchRootNodes from "@/hooks/use-fetchRootData";
+import useFetchNodeContent from "@/hooks/use-fetchNodeContent";
+import { Content } from "next/font/google";
+import { EditorRoot } from "novel";
+import useAddRootPage from "@/hooks/use-addRootPage";
+import useAddSubPage from "@/hooks/use-addSubPage";
+
 
 interface Node {
   id: string;
@@ -26,11 +32,18 @@ export default function Page() {
   const [ allRootNode, setAllRootNode] = useState<Node[]>([]);
   const [selectedEditor, setSelectedEditor] = useState<string | null>(null);
   const [editorContentMap, setEditorContentMap] = useState<Record<string, string>>({});
+  const [isLoading , setIsLoading ] = useState(true);
+
   const rootNodes = useFetchRootNodes();
+  const fetchContent = useFetchNodeContent(selectedEditor);
+  const { addRootPage, isLoading: isCreating } = useAddRootPage();
+
+
+  console.log("fetchContent for id", selectedEditor , "and content is", fetchContent );
 
   useEffect(() => {
 
-    const storedRootNodes = localStorage.getItem('rootNodes');
+    // const storedRootNodes = localStorage.getItem('rootNodes');
 
     // if(storedRootNodes){
     //   const parsedRootNodes = JSON.parse(storedRootNodes);
@@ -41,24 +54,62 @@ export default function Page() {
       
       localStorage.setItem('rootNodes' , JSON.stringify(rootNodes));
       setAllRootNode(rootNodes);
-      setSelectedEditor(rootNodes[0].id);
-      const savedContents = JSON.parse(localStorage.getItem("editorContentMap") || "{}");
-      setEditorContentMap(savedContents);
+      setSelectedEditor(rootNodes[0]?.id || null);
+      // const savedContents = JSON.parse(localStorage.getItem("editorContentMap") || "{}");
+      // setEditorContentMap(savedContents);
+      setIsLoading(false);
     }
   
   }, [rootNodes]);
 
   useEffect(() => {
-    localStorage.setItem("editorEntries", JSON.stringify(allRootNode));
-    localStorage.setItem("editorContentMap", JSON.stringify(editorContentMap));
-  }, [allRootNode, editorContentMap]);
+    if (selectedEditor && fetchContent !== null) {
+      setAllRootNode((prevNodes) =>
+        prevNodes.map((node) =>
+          node.id === selectedEditor && node.content !== fetchContent
+            ? { ...node, content: fetchContent }
+            : node
+        )
+      );
+    }
+  }, [fetchContent, selectedEditor]);
 
-  const handleAddEditor = (title: string) => {
-    // const newEntry: EditorEntry = { id: crypto.randomUUID(), title };
+  const handleAddEditor = async (title: string) => {
+    const updatedNodes = await addRootPage(title);
+    if (updatedNodes) {
+      setAllRootNode(updatedNodes);
+      setSelectedEditor(updatedNodes[updatedNodes.length - 1]?.id ?? null);
+    }
+  };
+  
+  
+
+  // useEffect(() => {
+  //   localStorage.setItem("editorEntries", JSON.stringify(allRootNode));
+  //   localStorage.setItem("editorContentMap", JSON.stringify(editorContentMap));
+  // }, [allRootNode, editorContentMap]);
+
+  // const handleAddEditor = (title: string) => {
+  //   const newNode : Node = {
+  //     id: crypto.randomUUID(),
+  //     title,
+  //     parentId: null,
+  //     gitPath: "",
+  //     commitSha: "",
+  //     createdAt: new Date().toISOString(),
+  //     updatedAt: new Date().toISOString(),
+  //     content: "",
+  //     children: []
+
+  //   }
+  //   setAllRootNode(prev => [...prev , newNode]);
+  //   setEditorContentMap(prev => ({...prev , [newNode.id] : ""}));
+  //   setSelectedEditor(newNode.id);
+  //   // const newEntry: EditorEntry = { id: crypto.randomUUID(), title };
     // setEditorEntries((prev) => [...prev, newEntry]);
     // setEditorContentMap((prev) => ({ ...prev, [newEntry.id]: "" }));
     // setSelectedEditor(newEntry.id);
-  };
+  // };
 
   const handleEditorChange = (content: string) => {
     if (selectedEditor) {
@@ -70,13 +121,24 @@ export default function Page() {
     }
   };
 
+  // if(isLoading){
+  //   return(
+  //     <div className="flex min-h-screen w-full items-center justify-center">
+  //     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  //   </div>
+  //   )
+  // }
+
   return (
     <div className="flex min-h-screen w-full">
       {/* Sidebar */}
       <Sidebar
         editorTitles={allRootNode}
         onAddEditor={handleAddEditor}
-        onSelectEditor={setSelectedEditor}
+        onSelectEditor={(id)=>{
+          console.trace("Printing id" , id);
+          setSelectedEditor(id);
+        }}
         selectedEditor={selectedEditor}
       />
 
@@ -112,7 +174,9 @@ export default function Page() {
           <TailwindAdvancedEditor
             key={selectedEditor}
             editorKey={selectedEditor}
-            initialRawContent={editorContentMap[selectedEditor] ?? ""}
+            initialRawContent={ allRootNode.find(node => node.id === selectedEditor) ?. content || 
+              fetchContent 
+            }
             onRawContentChange={handleEditorChange}
           />
         )}

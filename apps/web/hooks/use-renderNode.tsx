@@ -32,8 +32,10 @@ export default function useRenderNode({
 }: UseRenderNodeProps) {
   return editorTitles.map((entry) => {
 
+    // console.log("Printing Childrecn" , entry)
+
     const isOpen = openNodeIds.has(entry.id);
-    const hasChildren = entry.children.length > 0;
+    const hasChildren = (entry.children ?? {}).length > 0;
 
 
     return (

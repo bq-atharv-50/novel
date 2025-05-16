@@ -10,19 +10,27 @@ export interface ChildNode {
   children?: ChildNode[];
 }
 export default function useFetchChild() {
-    return useCallback(function fetchChildren(parentId: string): Promise<ChildNode[]> {
+    return useCallback(async function fetchChildren(parentId: string) {
       // Recursively build tree from flat data
-      const getChildren = (pid: string): ChildNode[] => {
-        return (data as any[])
-          .filter((item) => item.parentId === pid)
-          .map((item) => ({
-            id: item.id,
-            title: item.title,
-            parentId: item.parentId,
-            children: getChildren(item.id),
-          }));
-      };
+        try{
+
+            const response = await fetch(`http://localhost:5000/getNote/${parentId}`, {
+                method: "GET",
+                headers: {
+                    "Content-type": "application/json"
+                }
+            })
+            
+            if(!response.ok){
+                throw new Error("Failed to Fetch Sub pages");
+            }
+            const data  = await response.json();
+            return data;         
+        }
+        catch(error){
+            console.log("Error in Fetching sub Pages", error);
+            return [];
+        }
   
-      return Promise.resolve(getChildren(parentId));
     }, []);
   }
