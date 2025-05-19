@@ -17,15 +17,18 @@ export default function useAddSubPage(setAllRootNode: (nodes: Node[]) => void, s
   const [error, setError] = useState<string | null>(null);
 
   const addSubPage = async (title: string, parentId: string) => {
+    console.log("parent ID " , parentId , "title" , title);
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch("/api/nodes", {
+      const res = await fetch(`http://localhost:5000/CreateChild/${parentId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, parentId }),
       });
+
+      console.log("Printing response afterr the adding page",res)
 
       if (!res.ok) {
         throw new Error("Failed to create subpage");

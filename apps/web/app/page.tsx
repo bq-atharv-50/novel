@@ -7,14 +7,14 @@ import Menu from "@/components/tailwind/ui/menu";
 import { ScrollArea } from "@/components/tailwind/ui/scroll-area";
 import { BookOpen, GithubIcon } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Children, useEffect, useState } from "react";
 import useFetchRootNodes from "@/hooks/use-fetchRootData";
 import useFetchNodeContent from "@/hooks/use-fetchNodeContent";
 import { Content } from "next/font/google";
 import { EditorRoot } from "novel";
 import useAddRootPage from "@/hooks/use-addRootPage";
 import useAddSubPage from "@/hooks/use-addSubPage";
-
+import useSavePageContent from "@/hooks/use-savePageContent"; 
 
 interface Node {
   id: string;
@@ -37,7 +37,8 @@ export default function Page() {
   const rootNodes = useFetchRootNodes();
   const fetchContent = useFetchNodeContent(selectedEditor);
   const { addRootPage, isLoading: isCreating } = useAddRootPage();
-
+  const { addSubPage } = useAddSubPage(setAllRootNode , setSelectedEditor)
+  const {handleEditorChange , saveStatus} = useSavePageContent({selectedEditor});
 
   console.log("fetchContent for id", selectedEditor , "and content is", fetchContent );
 
@@ -74,12 +75,23 @@ export default function Page() {
     }
   }, [fetchContent, selectedEditor]);
 
-  const handleAddEditor = async (title: string) => {
-    const updatedNodes = await addRootPage(title);
-    if (updatedNodes) {
-      setAllRootNode(updatedNodes);
-      setSelectedEditor(updatedNodes[updatedNodes.length - 1]?.id ?? null);
+
+  const handleAddEditor = async (title: string , parentId : string | null = null) => {
+    
+    console.log("Priting parentID in page.tsx" , parentId, "Title ", title)
+
+    if(parentId){
+        addSubPage(title , parentId);
     }
+    else{
+      const updatedNodes = await addRootPage(title);
+      if (updatedNodes) {
+        setAllRootNode(updatedNodes);
+        setSelectedEditor(updatedNodes[updatedNodes.length - 1]?.id ?? null);
+      }
+    }
+
+   
   };
   
   
@@ -111,15 +123,15 @@ export default function Page() {
     // setSelectedEditor(newEntry.id);
   // };
 
-  const handleEditorChange = (content: string) => {
-    if (selectedEditor) {
-      setEditorContentMap((prev) => {
-        const updated = { ...prev, [selectedEditor]: content };
-        localStorage.setItem("editorContentMap", JSON.stringify(updated));
-        return updated;
-      });
-    }
-  };
+  // const handleEditorChange = (content: string) => {
+  //   if (selectedEditor) {
+  //     setEditorContentMap((prev) => {
+  //       const updated = { ...prev, [selectedEditor]: content };
+  //       localStorage.setItem("editorContentMap", JSON.stringify(updated));
+  //       return updated;
+  //     });
+  //   }
+  // };
 
   // if(isLoading){
   //   return(
@@ -134,7 +146,10 @@ export default function Page() {
       {/* Sidebar */}
       <Sidebar
         editorTitles={allRootNode}
-        onAddEditor={handleAddEditor}
+        onAddEditor={(title , parentId)=>{
+          handleAddEditor(title , parentId);
+          alert(`${parentId} and ${title}`)
+        }}
         onSelectEditor={(id)=>{
           console.trace("Printing id" , id);
           setSelectedEditor(id);

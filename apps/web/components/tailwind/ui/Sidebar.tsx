@@ -19,7 +19,7 @@ interface Node{
 
 interface SidebarProps {
   editorTitles: Node[];
-  onAddEditor: (title: string) => void;
+  onAddEditor: (title: string , parentId ?: string) => void;
   onSelectEditor: (title: string) => void;
   selectedEditor: string | null;
 }
@@ -34,13 +34,14 @@ export function Sidebar({
   const [showModal, setShowModal] = useState(false);
   const [newEditorTitle, setNewEditorTitle] = useState("");
 
+  const [parentIdForNewPage , setParentIdForNewPage] = useState< string| null>(null)
   const [dropDown,setDropDown] = useState(false);
   const [openNodeIds , setOpenNodeIds ] = useState<Set<string>>(new Set());
 
  
   const handleAdd = () => {
     if (newEditorTitle.trim()) {
-      onAddEditor(newEditorTitle.trim());
+      onAddEditor(newEditorTitle.trim(), parentIdForNewPage);
       setNewEditorTitle("");
       setShowModal(false);
     }
@@ -65,7 +66,10 @@ export function Sidebar({
     selectedEditor,
     onSelectEditor,
     toggleNode,
-    onAddEditor: () => setShowModal(true),
+    onAddEditor: (parentId : string) => {
+      setParentIdForNewPage(parentId)
+      setShowModal(true)
+    }
   });
 
 
